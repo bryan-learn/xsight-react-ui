@@ -27,6 +27,7 @@ var config = {
   }
 };
 
-config.addVendor('react', bower_dir + '/react/react.min.js');
+config.addVendor('/react$/', bower_dir + '/react/react.min.js');
+config.addVendor('/react-dom$/', bower_dir + '/react-dom/react-dom.min.js');
 
 module.exports = config;
