@@ -7,7 +7,7 @@ var config = {
     this.module.noParse.push(new RegExp(path));
   },
   entry: {
-      app: ['./app/main.js'],
+      app: ['./app/index.js'],
       vendors: ['react']
   },
   resolve: { alias: {} },
