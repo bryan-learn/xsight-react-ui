@@ -17,15 +17,6 @@ var data = {
     "name": "traffic",
     "columns": ["time", "value"],
     "points": [
-//        ["2015-12-13T07:47:20Z",5929538],
-//        ["2015-12-13T07:48:20Z",5932552],
-//        ["2015-12-13T07:49:20Z",5932552],
-//        ["2015-12-13T07:50:20Z",5934368],
-//        ["2015-12-13T07:51:20Z",5936381],
-//        ["2015-12-13T07:52:20Z",5939166],
-//        ["2015-12-13T07:53:20Z",5939166],
-//        ["2015-12-13T07:54:21Z",5940508],
-//        ["2015-12-13T07:55:21Z",5940966],
         ["2015-12-13T07:56:21Z",5940966]
     ]
 };
@@ -80,6 +71,7 @@ exports.MyChart = React.createClass({
     }); //ajax
   },
   componentDidMount: function() {
+    console.log("xs-chart component loaded");
     this.loadContentFromServer();
     setInterval(this.loadContentFromServer, this.props.pollInterval);
   },
@@ -146,8 +138,9 @@ exports.MyTable = React.createClass({
     }); //ajax
   },
   componentDidMount: function() {
+    console.log("xs-table component loaded");
     this.loadContentFromServer();
-    setInterval(this.loadContentFromServer, this.props.pollInterval);
+    //setInterval(this.loadContentFromServer, this.props.pollInterval);
   },
   render: function () {
     return div({className: "xsChart"},
