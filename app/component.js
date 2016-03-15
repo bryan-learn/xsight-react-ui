@@ -22,6 +22,8 @@ var data = {
 };
 
 var series = new TimeSeries(data);
+var seriesArr = new Array();
+seriesArr.push(series);
 var series2 = new TimeSeries(data);
 var date = new Date();
 
@@ -38,32 +40,33 @@ exports.MyChart = React.createClass({
         this.setState({data: data});
         console.log("updated data");
 
-        // store influxdb series data as Pond series data
-        var s1 = {
-            "name": data["results"][0]["series"][0]["name"],
-            "columns": data["results"][0]["series"][0]["columns"],
-            "points": data["results"][0]["series"][0]["values"]
-        };
-        var s2 = {
-            "name": data["results"][1]["series"][0]["name"],
-            "columns": data["results"][1]["series"][0]["columns"],
-            "points": data["results"][1]["series"][0]["values"]
-        };
-
-        //convert RFC 3339 timestamps to unix epoch (ms)
-        for(var i=0; i<s1["points"].length; i++){
-            date.setRFC3339(s1["points"][i][0]);
-            s1["points"][i][0] = date.getTime();
+        if("error" in data){ // err chk
+            console.log("influx error");
+            console.log(data);
+        }else if("series" in data){ // chk for data
+                console.log(JSON.stringify(data));
+                var arr = new Array();
+                for(var i=0; i<data.series.length; i++){ //construct pond TimeSeries objs from series Json
+                    if("points" in data.series[i] && "columns" in data.series[i] && "name" in data.series[i]){
+                        //convert RFC 3339 timestamps to unix epoch (ms)
+                        for(var j=0; j<data.series[i]["points"].length; j++){
+                            date.setRFC3339(data.series[i]["points"][j][0]);
+                            data.series[i]["points"][j][0] = date.getTime();
+                        }
+                        arr.push(new TimeSeries(data.series[i]));
+                    }
+                    else { // malformated json object - missing points|columns|name
+                        console.log("received malformated influx2pond result");
+                        console.log("series object missing 'points', 'columns', or 'name'");
+                    }
+                }
+                seriesArr = arr;
+                console.log(seriesArr);
+                
+        }else { // malformated json object - no series
+            console.log("received malformated influx2pond result");
+            console.log("object missing 'series' property");
         }
-        for(var i=0; i<s2["points"].length; i++){
-            date.setRFC3339(s2["points"][i][0]);
-            s2["points"][i][0] = date.getTime();
-        }
-        
-        series = new TimeSeries(s1);
-        series2 = new TimeSeries(s2);
-        console.log(series);
-        console.log(series2);
       }.bind(this),
       error: function() {
         console.error(this.props.url, status, err.toString());
@@ -77,16 +80,14 @@ exports.MyChart = React.createClass({
   },
   render: function () {
     return div(null,
-      <ChartContainer timeRange={series.timerange()} width={800}>
+      <ChartContainer timeRange={seriesArr[0].timerange()} width={800}>
         <ChartRow height="200">
-            <YAxis id="axis1" label="Octets Out" min={series.min()} max={series.max()} width="100" type="linear"/>
+            <YAxis id="axis1" label="Octets Out" min={seriesArr[0].min()} max={seriesArr[0].max()} width="100" type="linear"/>
             <Charts>
-                <LineChart axis="axis1" series={series}/>
-                <LineChart axis="axis2" series={series2}/>
+                <LineChart axis="axis1" series={seriesArr[0]}/>
             </Charts>
-            <YAxis id="axis2" label="Octets In" min={series2.min()} max={series2.max()} width="100" type="linear"/>
         </ChartRow>
-        <Table series={series} timeFormat="h:mm:ss a" />
+        <Table series={seriesArr[0]} timeFormat="h:mm:ss a" />
       </ChartContainer> 
     );
   }
