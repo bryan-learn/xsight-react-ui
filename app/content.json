@@ -1,0 +1,37 @@
+[
+    {
+        "id": 1388534400000,
+        "source": "firehose1",
+        "value": 1234
+    },
+    {
+        "id": 1420070400000,
+        "source": "firehose3",
+        "value": 4345345 
+    },
+    {
+        "id": 1455833559581,
+        "source": "firehose3",
+        "value": 9000
+    },
+    {
+        "id": 145583355,
+        "source": "MI",
+        "value": 1 
+    },
+    {
+        "id": 2455859581,
+        "source": "XSEDE",
+        "value": 88 
+    },
+    {
+        "id": 1455859581,
+        "source": "MI",
+        "value": 2 
+    },
+    {
+        "id": 5833559581,
+        "source": "WEC",
+        "value": 3 
+    }
+]
