@@ -29,6 +29,10 @@ app.use(function(req, res, next) {
     next();
 });
 
+
+/* Define API endpoints */
+
+// GET content file
 app.get('/api/content', function(req, res) {
     // Read the content file then send it as response.
     fs.readFile(CONTENT_FILE, function(err, data) {
@@ -40,6 +44,7 @@ app.get('/api/content', function(req, res) {
   });
 });
 
+// GET <metric> by <flodID>
 app.get('/api/queryByFlow/:metric/:flowID', function(req, res) {
     // TODO read influx host and api endpoints from config
     var host = "https://hotel.psc.edu:8086";
@@ -58,6 +63,7 @@ app.get('/api/queryByFlow/:metric/:flowID', function(req, res) {
     }).auth('dbuser', 'TcitoPsb', true);
 });
 
+// GET traffic graph data
 //select derivative(mean(value), 1h) from DataOctetsOut where dtn='firehose2' and time > now() - 12h group by time(1h) fill(0) 
 app.get('/api/xsight/traffic-graph/:param1', function(req, res) {
     // TODO read influx host and api endpoints from config
@@ -77,6 +83,45 @@ app.get('/api/xsight/traffic-graph/:param1', function(req, res) {
     }).auth('dbuser', 'TcitoPsb', true);
 });
 
+// GET abstract graph data
+app.get('/api/xsight/abstract-graph/', function(req, res) {
+    // TODO read influx host and api endpoints from config
+    var host = "https://hotel.psc.edu:8086";
+    var queryStr = encodeURIComponent("show tag values with key=\"netname\"; show tag values with key=\"domain\"; show tag values with key=\"dtn\"");
+    var url = host+"/query?db=xsight&q="+queryStr;
+
+    var jRes;
+    
+    //get all the tags
+    request.get(url, function(error, response, body){
+        if(error){ // url request err chking
+            logger.error(error);
+            res.send("failed");
+        }
+        else{
+            jRes = JSON.parse(body);
+            jRes = i2p.influx2pond(jRes); // err chk & convert to pond obj
+            //res.json(j);
+
+            //count flows for each tag combination (weight of the link)
+            queryStr = "";
+            for(var net in jRes.series[0].points){
+              for(var dom in jRes.series[1].points){
+                for(var dtn in jRes.series[2].points){
+                 // count flows for netname[net] & domain[domain] & dtn[dtn]
+                 var indx = ""+net+dom+dtn;
+                 queryStr += encodeURIComponent("select count(value) as i"+indx+" from StartTime where netname='"+jRes.series[0].points[net][0]+"' AND domain='"+jRes.series[1].points[dom][0]+"' AND dtn='"+jRes.series[2].points[dtn][0]+"';");
+                }
+              }
+            }
+            res.send(queryStr);
+        }
+    }).auth('dbuser', 'TcitoPsb', true);
+
+    
+});
+
+// GET result of custom influxDB query
 app.get('/api/custom/query/:queryStr', function(req, res) {
     var queryStr = encodeURIComponent(req.params.queryStr);
     var host = "https://hotel.psc.edu:8086";
