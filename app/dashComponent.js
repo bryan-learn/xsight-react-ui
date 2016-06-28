@@ -1,7 +1,11 @@
 var exports = module.exports = {};
 var $ = require('jquery');
 var React = require('react');
+var forceGraph = require('./forceGraph.js');
+var logger = require('./logger.js');
+var d3 = require('d3');
 
+logger.log("in forcegraph");
 
 var SelectedSourceTable = React.createClass({
     render: function(){
@@ -31,6 +35,37 @@ var SelectedSourceTable = React.createClass({
 });
 
 var DiscoveryGraph = React.createClass({
+    getInitialState: function() {
+        return {
+            graph: {}
+        }
+    },
+    componentDidMount: function(){
+        // load data from server
+        this.asyncRequest = $.ajax({
+            url: this.props.url,
+            dataType: 'json',
+            cache: false,
+            success: function(data){
+                this.setState({
+                    graph: data
+                });
+                forceGraph.init();
+                logger.log("Success: loaded data into graph [callback]");
+            }.bind(this),
+            error: function(){
+                logger.error(this.props.url, status, err.toString());
+            }.bind(this)
+        });
+        
+    },
+    componentDidUpdate: function(){
+        forceGraph.setGraph(this.state.graph);
+    },
+    componentWillUnmount: function(){
+        // stop async requests if still outstanding
+        this.asyncRequest.abort();
+    },
     handleChange: function(){
         this.props.onUserInput(
             this.refs.databaseInput.value
@@ -38,14 +73,7 @@ var DiscoveryGraph = React.createClass({
     },
     render: function(){
         return(
-            <form>
-                <input
-                    type="text"
-                    value={this.props.database.name}
-                    ref="databaseInput"
-                    onChange={this.handleChange}
-                />
-            </form>
+            <div className="DiscoveryGraph"></div>
         );
     }
 });
@@ -53,10 +81,10 @@ var DiscoveryGraph = React.createClass({
 var Dashboard = React.createClass({
     getInitialState: function(){
         return {
-            db: {name: "Xsight"},
-            net: {name: "XSEDE"},
-            domain: {name: "PSC"},
-            host: {name: "firehose5"}
+            db: {name: "Xsight", id: 0},
+            net: {name: "XSEDE", id: 1},
+            domain: {name: "PSC", id: 2},
+            host: {name: "firehose5", id: 3}
         };
     },
     handleUserInput: function(databaseName){
@@ -79,6 +107,7 @@ var Dashboard = React.createClass({
                     domain={this.state.domain}
                     host={this.state.host}
                     onUserInput={this.handleUserInput}
+                    url="api/xsight/graph/"
                 />
             </div>
         );

@@ -9,6 +9,7 @@ var logger = require('./logger.js');
 var app = express();
 
 var CONTENT_FILE = path.join(__dirname, 'res.json');
+var GRAPH_FILE = path.join(__dirname, 'graph.json');
 
 var index = new pond.Index("1d-12345");
 
@@ -83,7 +84,21 @@ app.get('/api/xsight/traffic-graph/:param1', function(req, res) {
     }).auth('dbuser', 'TcitoPsb', true);
 });
 
+// GET graph file
+app.get('/api/xsight/graph/', function(req, res) {
+    // Read the content file then send it as response.
+    fs.readFile(GRAPH_FILE, function(err, data) {
+    if (err) {
+      logger.error(err);
+      process.exit(1);
+    }
+    res.json(JSON.parse(data));
+  });
+});
+
 // GET abstract graph data
+    // TEMP disabled this endpoint
+/*
 app.get('/api/xsight/abstract-graph/', function(req, res) {
     // TODO read influx host and api endpoints from config
     var host = "https://hotel.psc.edu:8086";
@@ -117,9 +132,8 @@ app.get('/api/xsight/abstract-graph/', function(req, res) {
             res.send(queryStr);
         }
     }).auth('dbuser', 'TcitoPsb', true);
-
-    
 });
+*/
 
 // GET result of custom influxDB query
 app.get('/api/custom/query/:queryStr', function(req, res) {
