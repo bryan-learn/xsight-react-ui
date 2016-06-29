@@ -1,7 +1,7 @@
 var exports = module.exports = {};
 var d3 = require('d3');
 
-// Init UI elements
+// Define UI elements. Most are initialized in init() function
 
 var colorPalette = {
     "primary": { //blue
@@ -34,25 +34,49 @@ var colorPalette = {
     }
 };
 
-var width = window.innerWidth,
-    height = window.innerHeight;
+var rootElem = null; // Html Element this app is rendered in. Assigned in init()
 
-var force = d3.layout.force()
+var width, height;
+
+var force;
+
+var svg;
+
+var link, node;
+
+var tooltip;
+
+var tags;
+
+var root;
+var currentNode = root;
+
+// Define functions
+function init(elem){
+    console.log("force graph init");
+    // Get root element to render in from caller
+    rootElem = elem;
+
+    //TODO how to get height&width from rootElem?
+    width = window.innerWidth;
+    height = window.innerHeight;
+    
+    force = d3.layout.force()
     .size([width, height])
     .linkDistance(200)
     .charge(-1000)
     .on("tick", tick);
-
-var svg = d3.select("body")
+    
+    svg = d3.select(rootElem)
     .style("background-color", colorPalette.primary.base)
     .append("svg")
     .attr("width", width)
     .attr("height", height);
-
-var link = svg.selectAll(".link"),
+    
+    link = svg.selectAll(".link"),
     node = svg.selectAll(".node");
-
-var tooltip = d3.select("body")
+    
+    tooltip = d3.select(rootElem)
     .append("div")
     .style("background", "#333")
     .style("background", "rgba(0,0,0,0.8")
@@ -63,13 +87,15 @@ var tooltip = d3.select("body")
     .style("padding", "5px")
     .style("visibility", "hidden")
     .text("a simple tooltip");
+    
+    tags = {"series":[{"name":"netnameTagValues","columns":["netname"],"points":[["ALL"],["XSEDE"]]},{"name":"domainTagValues","columns":["domain"],"points":[["PSC"]]},{"name":"dtnTagValues","columns":["dtn"],"points":[["firehose2"],["firehose6"]]}]} 
+    
+    var n = flattenAll_BF(root); // flattenAll should happen first, it defined the node IDs
+    update(); // Start the update loop after all functions are defined
+    collapseAll(); // graph starts in collapsed state 
 
-var tags = {"series":[{"name":"netnameTagValues","columns":["netname"],"points":[["ALL"],["XSEDE"]]},{"name":"domainTagValues","columns":["domain"],"points":[["PSC"]]},{"name":"dtnTagValues","columns":["dtn"],"points":[["firehose2"],["firehose6"]]}]} 
+}
 
-var root;
-var currentNode = root;
-
-// Define functions
 
 function update(){
     var nodes = flattenVisible(root),
@@ -400,12 +426,6 @@ function setGraph(aGraph){
     root = aGraph;
 }
 
-function init(){
-    console.log("force graph init");
-    var n = flattenAll_BF(root); // flattenAll should happen first, it defined the node IDs
-    update(); // Start the update loop after all functions are defined
-    collapseAll(); // graph starts in collapsed state 
-}
 
 exports.init = init;
 exports.setGraph = setGraph;

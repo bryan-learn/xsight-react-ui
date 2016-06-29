@@ -50,7 +50,8 @@ var DiscoveryGraph = React.createClass({
                 this.setState({
                     graph: data
                 });
-                forceGraph.init();
+                var elem = this.getDOMNode();
+                forceGraph.init(elem);
                 logger.log("Success: loaded data into graph [callback]");
             }.bind(this),
             error: function(){
@@ -73,7 +74,7 @@ var DiscoveryGraph = React.createClass({
     },
     render: function(){
         return(
-            <div className="DiscoveryGraph"></div>
+            <div className="DiscoveryGraph" id="DiscoveryGraph"></div>
         );
     }
 });
