@@ -6,4 +6,3 @@ xsight-react-ui
 - `npm install` - install modules
 - `webpack` - build project
 - `npm start` - start server on port default port 
-
