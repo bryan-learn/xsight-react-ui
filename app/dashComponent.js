@@ -70,6 +70,8 @@ var DiscoveryGraph = React.createClass({
     handleChange: function(){
         this.props.onUserInput(
             this.refs.databaseInput.value
+            //TODO call function in forceGraph.js which returns data source context
+           // forceGraph.getSourceContext();
         );
     },
     render: function(){

@@ -51,6 +51,13 @@ var tags;
 var root;
 var currentNode = root;
 
+var sourceContext = {
+    database: '',
+    network: '',
+    domain: '',
+    host: ''
+};
+
 // Define functions
 function init(elem){
     console.log("force graph init");
@@ -343,6 +350,16 @@ function getAllDTNs(){
     return dtns;
 }
 
+function getAllExpanded(){
+    var selectedNodes = [];
+    var nodes = flattenAll_BF(root);
+    for(var i in nodes){
+        if(nodes[i].children) selectedNodes.push(nodes[i]); // if node is expanded (has visible children), add to list
+    }
+
+    return selectedNodes;
+}
+
 function getAllType(type){
     switch(type){
         case "network":
@@ -404,8 +421,49 @@ function selectNode(n){
     }
 
     showNode(n); //show
+
+    // update sourceContext when new sources are selected.
+    // At this point only up to one node of each type is selected/expanded.
+    var selectedNodes = getAllExpanded();
+ 
+
+    console.log("in selectNode():"); //DEBUG
+    console.log("    Selected node count: "+selectedNodes.length);
+    clearSourceContext(); //remove old values
+    for(var s in selectedNodes){
+        console.log("    ID: "+s.id);  //BUG: nodes in this array do not have IDs. getAllExpanded() should return indexed nodes
+        switch(getNodeById(s.id).type){
+            case "database":
+                sourceContext.database = s.name;
+                break;
+            case "network":
+                sourceContext.network = s.name;
+                break;
+            case "domain":
+                sourceContext.domain = s.name;
+                break;
+            case "dtn":
+                sourceContext.host = s.name;
+                break;
+            default:
+                return null;
+        }
+    }
+
 }
 
+function clearSourceContext(){
+    sourceContext = {
+        database: '',
+        network: '',
+        domain: '',
+        host: ''
+    };
+}
+
+function getSourceContext(){
+    return sourceContext;
+}
 
 //TODO Returns graph structure constructed from API data
 function buildGraph(graphData){
@@ -430,4 +488,5 @@ function setGraph(aGraph){
 exports.init = init;
 exports.setGraph = setGraph;
 exports.update = update;
+exports.getSourceContext = getSourceContext;
 //exports.create = create;
