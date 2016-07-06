@@ -51,6 +51,7 @@ var tags;
 var root;
 var currentNode = root;
 
+var inputCallback = null; // function to call on user input
 var sourceContext = {
     database: '',
     network: '',
@@ -455,6 +456,10 @@ function selectNode(n){
         }
     }
 
+    // if callback is set, execute function. Used as custom event.
+    if(inputCallback){
+        inputCallback();
+    }
 }
 
 function clearSourceContext(){
@@ -468,6 +473,10 @@ function clearSourceContext(){
 
 function getSourceContext(){
     return sourceContext;
+}
+
+function setInputCallback(func){
+    inputCallback = func;
 }
 
 //TODO Returns graph structure constructed from API data
@@ -494,4 +503,5 @@ exports.init = init;
 exports.setGraph = setGraph;
 exports.update = update;
 exports.getSourceContext = getSourceContext;
+exports.setInputCallback = setInputCallback;
 //exports.create = create;

@@ -41,6 +41,10 @@ var DiscoveryGraph = React.createClass({
             sourceContext: {}
         }
     },
+    componentWillMount: function(){
+        // explicitly set callback for userInput
+        forceGraph.setInputCallback(this.handleChange);
+    },
     componentDidMount: function(){
         // load data from server
         this.asyncRequest = $.ajax({
@@ -76,7 +80,7 @@ var DiscoveryGraph = React.createClass({
     },
     render: function(){
         return(
-            <div className="DiscoveryGraph" id="DiscoveryGraph" onMouseMove={this.handleChange}></div>
+            <div className="DiscoveryGraph" id="DiscoveryGraph" ></div>
         );
     }
 });
