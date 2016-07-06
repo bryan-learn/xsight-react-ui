@@ -281,6 +281,7 @@ function flattenAll_BF(root){
         node.id = ++i; //index parent
         n.push(node);  //add to return list
 
+        // link children to this parent node
         for(var j in children){
             if(!children[j].parent){children[j].parent = node.id;}
             q.push(children[j]); //enqueue child
@@ -350,14 +351,16 @@ function getAllDTNs(){
     return dtns;
 }
 
-function getAllExpanded(){
-    var selectedNodes = [];
+function getAllExpandedIDs(){
+    var selectedIDs = [];
     var nodes = flattenAll_BF(root);
-    for(var i in nodes){
-        if(nodes[i].children) selectedNodes.push(nodes[i]); // if node is expanded (has visible children), add to list
+    for(var i=0; i<nodes.length; i++){
+        if(nodes[i].children || (!nodes[i].children && !nodes[i]._children) ){
+            selectedIDs.push(nodes[i].id); // if node is expanded (has visible children), add to list
+        }
     }
 
-    return selectedNodes;
+    return selectedIDs;
 }
 
 function getAllType(type){
@@ -413,10 +416,14 @@ function selectNode(n){
         hideNode(a[i]);                 // hide
     }
 
+    var selectedIDs = [];
+    selectedIDs.push(n.id);
+
     // expand parent up to root
     var i=n.parent;
     while(i>0){
         showNode(getNodeById(i));
+        selectedIDs.push(i);
         i = getNodeById(i).parent;
     }
 
@@ -424,26 +431,24 @@ function selectNode(n){
 
     // update sourceContext when new sources are selected.
     // At this point only up to one node of each type is selected/expanded.
-    var selectedNodes = getAllExpanded();
+    //var selectedIDs = getAllExpandedIDs();
  
 
-    console.log("in selectNode():"); //DEBUG
-    console.log("    Selected node count: "+selectedNodes.length);
     clearSourceContext(); //remove old values
-    for(var s in selectedNodes){
-        console.log("    ID: "+s.id);  //BUG: nodes in this array do not have IDs. getAllExpanded() should return indexed nodes
-        switch(getNodeById(s.id).type){
+    for(var sid=0; sid<selectedIDs.length; sid++){
+        var node = getNodeById(selectedIDs[sid]);
+        switch(node.type){
             case "database":
-                sourceContext.database = s.name;
+                sourceContext.database = node.name;
                 break;
             case "network":
-                sourceContext.network = s.name;
+                sourceContext.network = node.name;
                 break;
             case "domain":
-                sourceContext.domain = s.name;
+                sourceContext.domain = node.name;
                 break;
             case "dtn":
-                sourceContext.host = s.name;
+                sourceContext.host = node.name;
                 break;
             default:
                 return null;

@@ -14,19 +14,19 @@ var SelectedSourceTable = React.createClass({
             <tbody>
             <tr>
                 <td>Database: </td>
-                <td>{this.props.database.name}</td>
+                <td>{this.props.database}</td>
             </tr>
             <tr>
                 <td>Network: </td>
-                <td>{this.props.network.name}</td>
+                <td>{this.props.network}</td>
             </tr>
             <tr>
                 <td>Domain: </td>
-                <td>{this.props.domain.name}</td>
+                <td>{this.props.domain}</td>
             </tr>
             <tr>
                 <td>Host: </td>
-                <td>{this.props.host.name}</td>
+                <td>{this.props.host}</td>
             </tr>
             </tbody>
             </table>
@@ -37,7 +37,8 @@ var SelectedSourceTable = React.createClass({
 var DiscoveryGraph = React.createClass({
     getInitialState: function() {
         return {
-            graph: {}
+            graph: {},
+            sourceContext: {}
         }
     },
     componentDidMount: function(){
@@ -68,15 +69,14 @@ var DiscoveryGraph = React.createClass({
         this.asyncRequest.abort();
     },
     handleChange: function(){
+        logger.log("change event");
         this.props.onUserInput(
-            this.refs.databaseInput.value
-            //TODO call function in forceGraph.js which returns data source context
-           // forceGraph.getSourceContext();
+            forceGraph.getSourceContext()
         );
     },
     render: function(){
         return(
-            <div className="DiscoveryGraph" id="DiscoveryGraph"></div>
+            <div className="DiscoveryGraph" id="DiscoveryGraph" onMouseMove={this.handleChange}></div>
         );
     }
 });
@@ -84,32 +84,35 @@ var DiscoveryGraph = React.createClass({
 var Dashboard = React.createClass({
     getInitialState: function(){
         return {
-            db: {name: "Xsight", id: 0},
-            net: {name: "XSEDE", id: 1},
-            domain: {name: "PSC", id: 2},
-            host: {name: "firehose5", id: 3}
+            sourceContext: {
+                database: "",
+                network: "",
+                domain: "",
+                host: ""
+            }
         };
     },
-    handleUserInput: function(databaseName){
+    updateContext: function(sourceContext){
+        logger.log("updating dashboard context");
         this.setState({
-            db: {name: databaseName}
+            sourceContext: sourceContext 
         });
     },
     render: function(){
         return(
             <div>
                 <SelectedSourceTable 
-                    database={this.state.db} 
-                    network={this.state.net} 
-                    domain={this.state.domain} 
-                    host={this.state.host} 
+                    database={this.state.sourceContext.database} 
+                    network={this.state.sourceContext.network} 
+                    domain={this.state.sourceContext.domain} 
+                    host={this.state.sourceContext.host} 
                 />
                 <DiscoveryGraph 
-                    database={this.state.db}
-                    network={this.state.net}
-                    domain={this.state.domain}
-                    host={this.state.host}
-                    onUserInput={this.handleUserInput}
+                    database={this.state.sourceContext.database} 
+                    network={this.state.sourceContext.network} 
+                    domain={this.state.sourceContext.domain} 
+                    host={this.state.sourceContext.host} 
+                    onUserInput={this.updateContext}
                     url="api/xsight/graph/"
                 />
             </div>
