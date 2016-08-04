@@ -60,15 +60,18 @@ var sourceContext = {
 };
 
 // Define functions
-function init(elem){
+function init(elem, width, height){
     console.log("force graph init");
+    console.log(window.getComputedStyle(elem,null).getPropertyValue("height"));
+    console.log(height);
     // Get root element to render in from caller
     rootElem = elem;
 
     //TODO how to get height&width from rootElem?
     width = window.innerWidth;
-    height = window.innerHeight;
-    
+    height = window.innerHeight * 0.75;
+
+
     force = d3.layout.force()
     .size([width, height])
     .linkDistance(200)

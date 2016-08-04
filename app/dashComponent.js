@@ -46,6 +46,9 @@ var DiscoveryGraph = React.createClass({
         forceGraph.setInputCallback(this.handleChange);
     },
     componentDidMount: function(){
+        var elemWidth = $('#Dash').width();
+        var elemHeight = $('#Dash').height();
+
         // load data from server
         this.asyncRequest = $.ajax({
             url: this.props.url,
@@ -56,7 +59,7 @@ var DiscoveryGraph = React.createClass({
                     graph: data
                 });
                 var elem = this.getDOMNode();
-                forceGraph.init(elem);
+                forceGraph.init(elem, elemWidth, elemHeight);
                 logger.log("Success: loaded data into graph [callback]");
             }.bind(this),
             error: function(){
@@ -103,8 +106,10 @@ var Dashboard = React.createClass({
         });
     },
     render: function(){
+
+
         return(
-            <div>
+            <div id="Dash">
                 <SelectedSourceTable 
                     database={this.state.sourceContext.database} 
                     network={this.state.sourceContext.network} 
