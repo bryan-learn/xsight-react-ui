@@ -34,6 +34,14 @@ var SelectedSourceTable = React.createClass({
     }
 });
 
+var TrafficView = React.createClass({
+    
+});
+
+var QualityView = React.createClass({
+    
+});
+
 var DiscoveryGraph = React.createClass({
     getInitialState: function() {
         return {
