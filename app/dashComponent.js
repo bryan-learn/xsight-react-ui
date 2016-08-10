@@ -5,6 +5,7 @@ var ReactD3 = require('react-d3-components');
 var forceGraph = require('./forceGraph.js');
 var logger = require('./logger.js');
 var d3 = require('d3');
+var ReactGridLayout = require('react-grid-layout');
 
 logger.log("in forcegraph");
 
@@ -39,7 +40,7 @@ var TrafficView = React.createClass({
     render: function(){
         var data = {
             label: 'Traffic',
-            values: [{x: 'DTN1', y: 68},{x: 'DTN2', y: 27},{x: 'DTN3', y: 10}]
+            values: [{x: 'DTN1', y: Math.random()*100},{x: 'DTN2', y: Math.random()*100},{x: 'DTN3', y: Math.random()*100}]
         };
 
         return (<ReactD3.PieChart
@@ -55,26 +56,57 @@ var TrafficView = React.createClass({
 
 var QualityView = React.createClass({
     render: function(){
-        var data = [{
-            label: 'Quality',
-            values: []
-        }]
-
+        var data = [
+            [{
+                label: 'Quality',
+                values: []
+            }],
+            [{
+                label: 'Quality',
+                values: []
+            }],
+            [{
+                label: 'Quality',
+                values: []
+            }]
+        ]
         //Fill values
         for(var i=0; i<250; i++){
-            data[0].values.push({x: ''+i, y: Math.random()});
+            data[0][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
+            data[1][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
+            data[2][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
         }
 
         return (
-            <ReactD3.Waveform
-                data={data}
+            <div>
+            DTN1<ReactD3.Waveform
+                data={data[0]}
                 width={600}
-                height={200}
+                height={100}
                 colorScale={ d3.scale.linear()
                     .domain([0,1400])
                     .range(['#eb1785','#ff7b16'])
                 }
-            />         
+            />
+            DTN2<ReactD3.Waveform
+                data={data[1]}
+                width={600}
+                height={100}
+                colorScale={ d3.scale.linear()
+                    .domain([0,1400])
+                    .range(['#eb1785','#ff7b16'])
+                }
+            />
+            DTN3<ReactD3.Waveform
+                data={data[2]}
+                width={600}
+                height={100}
+                colorScale={ d3.scale.linear()
+                    .domain([0,1400])
+                    .range(['#eb1785','#ff7b16'])
+                }
+            />
+            </div>
         );
     }    
 });
@@ -156,25 +188,28 @@ var Dashboard = React.createClass({
             values: [{x: 'DTN1', y: 68},{x: 'DTN2', y: 27},{x: 'DTN3', y: 10}]
         };
 
+        // Define ReactGridLayout for Dashboard
+        var layout = [
+            {i: 'traffic-view', x: 0, y: 0, w: 6, h: 10}, 
+            {i: 'quality-view', x: 6, y: 0, w: 6, h: 10}, 
+            {i: 'dcgraph-view', x: 0, y: 11, w: 12, h: 18}
+        ] 
+
         return(
-            <div id="Dash">
-                <TrafficView />
-                <QualityView />
-                <SelectedSourceTable 
-                    database={this.state.sourceContext.database} 
-                    network={this.state.sourceContext.network} 
-                    domain={this.state.sourceContext.domain} 
-                    host={this.state.sourceContext.host} 
-                />
-                <DiscoveryGraph 
-                    database={this.state.sourceContext.database} 
-                    network={this.state.sourceContext.network} 
-                    domain={this.state.sourceContext.domain} 
-                    host={this.state.sourceContext.host} 
-                    onUserInput={this.updateContext}
-                    url="api/xsight/graph/"
-                />
-            </div>
+            <ReactGridLayout className="layout" layout={layout} cols={12} rowHeight={30} width={1200}>
+                <div key={'traffic-view'}><TrafficView/></div>
+                <div key={'quality-view'}><QualityView/></div>
+                <div key={'dcgraph-view'}>
+                    <DiscoveryGraph 
+                        database={this.state.sourceContext.database} 
+                        network={this.state.sourceContext.network} 
+                        domain={this.state.sourceContext.domain} 
+                        host={this.state.sourceContext.host} 
+                        onUserInput={this.updateContext}
+                        url="api/xsight/graph/"
+                    />
+                </div>
+            </ReactGridLayout>
         );
     }
 });
