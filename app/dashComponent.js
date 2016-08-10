@@ -72,9 +72,9 @@ var QualityView = React.createClass({
         ]
         //Fill values
         for(var i=0; i<250; i++){
-            data[0][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
-            data[1][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
-            data[2][0].values.push({x: ''+i, y: (Math.random()>0.8) ? Math.random() : 0});
+            data[0][0].values.push({x: ''+i, y: (Math.random()>0.9) ? 1 : 0});
+            data[1][0].values.push({x: ''+i, y: (Math.random()>0.75) ? 1 : 0});
+            data[2][0].values.push({x: ''+i, y: (Math.random()>0.3) ? 1 : 0});
         }
 
         return (
@@ -190,9 +190,9 @@ var Dashboard = React.createClass({
 
         // Define ReactGridLayout for Dashboard
         var layout = [
-            {i: 'traffic-view', x: 0, y: 0, w: 6, h: 10}, 
-            {i: 'quality-view', x: 6, y: 0, w: 6, h: 10}, 
-            {i: 'dcgraph-view', x: 0, y: 11, w: 12, h: 18}
+            {i: 'traffic-view', x: 0, y: 0, w: 6, h: 10, static: true}, 
+            {i: 'quality-view', x: 6, y: 0, w: 6, h: 10, static: true}, 
+            {i: 'dcgraph-view', x: 0, y: 11, w: 12, h: 18, static: true}
         ] 
 
         return(
