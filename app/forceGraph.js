@@ -46,7 +46,7 @@ var link, node;
 
 var tooltip;
 
-var tags;
+var tags, nodeTypes=[];
 
 var root;
 var currentNode = root;
@@ -100,7 +100,8 @@ function init(elem, width, height){
     .text("a simple tooltip");
     
     tags = {"series":[{"name":"netnameTagValues","columns":["netname"],"points":[["ALL"],["XSEDE"]]},{"name":"domainTagValues","columns":["domain"],"points":[["PSC"]]},{"name":"dtnTagValues","columns":["dtn"],"points":[["firehose2"],["firehose6"]]}]} 
-    
+    nodeTypes = ["database", "network", "domain", "dtn"];
+
     var n = flattenAll_BF(root); // flattenAll should happen first, it defined the node IDs
     update(); // Start the update loop after all functions are defined
     collapseAll(); // graph starts in collapsed state 
@@ -157,7 +158,7 @@ function update(){
     var circle = newNode.append("circle")   //create circle
         .attr("cx", function(d){return 0;})
         .attr("cy", function(d){return 0;})
-        .attr("r", function(d){return circleScale(d.relSize);})
+        .attr("r", function(d){return circleScale(d.type);})
         .attr("stroke-width", strokeWidth)
         .attr("stroke", strokeColor)
         .attr("fill", fillColor);
@@ -198,7 +199,7 @@ function strokeWidth(d) {
   return "0.8em";
 }
 
-var circleScale = d3.scale.quantize().domain([0, 1]).range([30, 35, 40, 45, 50, 55, 60, 65, 70]);
+var circleScale = d3.scale.ordinal().domain(nodeTypes).range([40,50,60,70]); // d3 doc says domain[0] should correspond to range[0], D[n]->R[n]. However this is doing the opposite of that..
 
 // Toggle children on click.
 function click(d){
@@ -223,8 +224,10 @@ function onTooltip(d){
 }
 
 // Tooltip: Mouse Move event - follow mouse position
-function moveTooltip(d){
-    tooltip.style("top", (d3.event.pageY-10)+"px").style("left",(d3.event.pageX+10)+"px");
+function moveTooltip(d){ 
+    var coords = d3.mouse(rootElem);
+    tooltip.style("top", (coords[1]-10)+"px").style("left",(coords[0]+10)+"px");
+    console.log("["+coords[0]+","+coords[1]+"]");
 }
 
 // Tooltip: Mouse Out event - hide tooltip
@@ -435,7 +438,6 @@ function selectNode(n){
 
     // update sourceContext when new sources are selected.
     // At this point only up to one node of each type is selected/expanded.
-    //var selectedIDs = getAllExpandedIDs();
  
 
     clearSourceContext(); //remove old values
@@ -507,4 +509,3 @@ exports.setGraph = setGraph;
 exports.update = update;
 exports.getSourceContext = getSourceContext;
 exports.setInputCallback = setInputCallback;
-//exports.create = create;
