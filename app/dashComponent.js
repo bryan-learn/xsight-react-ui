@@ -112,12 +112,6 @@ var QualityView = React.createClass({
 });
 
 var DiscoveryGraph = React.createClass({
-    getInitialState: function() {
-        return {
-            graph: {},
-            sourceContext: {}
-        }
-    },
     componentWillMount: function(){
         // explicitly set callback for userInput
         forceGraph.setInputCallback(this.handleChange);
@@ -139,7 +133,7 @@ var DiscoveryGraph = React.createClass({
                 forceGraph.init(elem, elemWidth, elemHeight);
                 logger.log("Success: loaded data into graph [callback]");
             }.bind(this),
-            error: function(){
+            error: function(err){
                 logger.error(this.props.url, status, err.toString());
             }.bind(this)
         });
@@ -173,14 +167,57 @@ var Dashboard = React.createClass({
                 network: "",
                 domain: "",
                 host: ""
-            }
+            },
+            trafficData: this.getTrafficData(),
+            qualityData: this.getQualityData()
         };
     },
-    updateContext: function(sourceContext){
-        logger.log("updating dashboard context");
+    updateContext: function(srcContext){
+        //logger.log("updating dashboard context");
         this.setState({
-            sourceContext: sourceContext 
+            sourceContext: srcContext,
+            trafficData: this.getTrafficData(),
+            qualityData: this.getQualityData()
         });
+        this.getTrafficData(); // sets state.trafficData
+        this.getQualityData(); // sets state.qualityData
+    },
+    getTrafficData: function(){
+        var apiUrl = this.props.urlBase; //start with base url then add on parameters
+
+        //append parameters to url (depenedent on sourceContext)
+        var tagStr = "-";
+        if(this.props.network != ""){
+            tagStr = this.props.network;   
+        }
+        else if(this.props.database != ""){
+            tagStr += " "+this.props.database;
+        }
+        else if(this.props.host != ""){
+            tagStr += " "+this.props.host;
+        }       
+
+        var duration = "year";
+
+        apiUrl += tagStr+"/"+duration;
+
+        // load data from server
+        this.asyncRequest = $.ajax({
+            url: apiUrl,
+            dataType: 'json',
+            cache: true,
+            success: function(data){
+                console.log("getTrafficData() return"); 
+                console.log(data); 
+                return data;
+            }.bind(this),
+            error: function(err){
+                logger.error(apiUrl, status, err.toString());
+            }.bind(this)
+        });
+    },
+    getQualityData: function(){
+
     },
     render: function(){
         var data = {
@@ -197,8 +234,18 @@ var Dashboard = React.createClass({
 
         return(
             <ReactGridLayout className="layout" layout={layout} cols={12} rowHeight={30} width={1200}>
-                <div key={'traffic-view'}><TrafficView/></div>
-                <div key={'quality-view'}><QualityView/></div>
+                <div key={'traffic-view'}>
+                    <TrafficView
+                        data={this.state.trafficData}
+                        urlBase="http://hotel.psc.edu:3000/api/xsight/traffic-graph/"
+                    />
+                </div>
+                <div key={'quality-view'}>
+                    <QualityView
+                        data={this.state.qualityData}
+                        urlBase="http://hotel.psc.edu:3000/api/xsight/quality-graph/"
+                    />
+                </div>
                 <div key={'dcgraph-view'}>
                     <DiscoveryGraph 
                         database={this.state.sourceContext.database} 

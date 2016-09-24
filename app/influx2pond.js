@@ -15,12 +15,24 @@ exports.influx2pond = function(influxJson){
         for (var i=0; i<influxJson.results.length; i++){
             if("series" in influxJson.results[i]){
                 for(var j=0; j<influxJson.results[i].series.length; j++){
-                    pondArr.push({
-                        "name": influxJson["results"][i]["series"][j].name,
-                        "columns": influxJson["results"][i]["series"][j].columns,
-                        "points": influxJson["results"][i]["series"][j].values,
+                    // if the series has tags, copy over tags
+                    if (typeof influxJson["results"][i]["series"][j].tags !== 'undefined' 
+                            || influxJson["results"][i]["series"][j].tags !== null)
+                        pondArr.push({
+                            "name": influxJson["results"][i]["series"][j].name,
+                            "tags": influxJson["results"][i]["series"][j].tags,
+                            "columns": influxJson["results"][i]["series"][j].columns,
+                            "points": influxJson["results"][i]["series"][j].values,
 
-                    });
+                        });
+                    else{ // else the series has no tags to copy over
+                        pondArr.push({
+                            "name": influxJson["results"][i]["series"][j].name,
+                            "columns": influxJson["results"][i]["series"][j].columns,
+                            "points": influxJson["results"][i]["series"][j].values,
+
+                        });
+                    }
                 }
             }
         }

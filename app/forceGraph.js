@@ -62,8 +62,6 @@ var sourceContext = {
 // Define functions
 function init(elem, width, height){
     console.log("force graph init");
-    console.log(window.getComputedStyle(elem,null).getPropertyValue("height"));
-    console.log(height);
     // Get root element to render in from caller
     rootElem = elem;
 
@@ -227,7 +225,6 @@ function onTooltip(d){
 function moveTooltip(d){ 
     var coords = d3.mouse(rootElem);
     tooltip.style("top", (coords[1]-10)+"px").style("left",(coords[0]+10)+"px");
-    console.log("["+coords[0]+","+coords[1]+"]");
 }
 
 // Tooltip: Mouse Out event - hide tooltip
@@ -490,7 +487,6 @@ function buildGraph(graphData){
 
   for(var i=0; i<graphData.series.length; i++ ){
     var item = graphData.series[i];
-    console.log(item.name+": "+item.columns+" | "+item.points);
     for(var p in item.points){
       g.children[i] = {"name": item.points[p][0]};
     }
