@@ -134,6 +134,82 @@ app.get('/api/xsight/traffic-graph/:tags/:duration', function(req, res) {
     }).auth('dbuser', 'TcitoPsb', true);
 });
 
+// GET quality graph data
+// :tags is a space-delimited list of influx tag values: (netname, domain, dtn); The database is assumed to be Xsight.
+app.get('/api/xsight/quality-graph/:tags/:duration', function(req, res) {
+    // Process params
+    var timeInterval = req.params.duration;
+    var tags = req.params.tags.toString().split(" ");
+    if( tags[0] == '-'){tags = [];} // using '-' as special char to denote no tags. Tags must have some value for the endpoint to resolve.
+
+    switch(timeInterval){
+        case "day":
+            timeInterval = "1d";
+            break;
+        case "week":
+            timeInterval = "7d";
+            break;
+        case "month":
+            timeInterval = "30d";
+            break;
+        case "year":
+            timeInterval = "365d";
+            break;
+        default: // assume 'week' for invalid duration
+            timeInterval = "7d";
+            break;
+    }
+    
+    // Build 'where' and 'group by' clauses (dependent on the provided tags)
+    var tagClause = "";
+    var groupClause = "";
+    var tagCnt = tags.length;
+    switch(tagCnt){
+        case 0: // DB
+            tagClause = ""; // no tag values
+            groupClause = "group by netname";
+            break;
+        case 1: //DB, netname
+            tagClause = "and netname='"+tags[0]+"'";
+            groupClause = "group by domain";
+            break;
+        case 2: //DB, netname, domain
+            tagClause = "and netname='"+tags[0]+"' and domain='"+tags[1]+"'";
+            groupClause = "group by dtn";
+            break;
+        case 3: //DB, netname, domain, dtn
+            tagClause = "and netname='"+tags[0]+"' and domain='"+tags[1]+"' and dtn='"+tags[2]+"'";
+            groupClause = "group by flow";
+            break;
+        default:
+            tagClause = "";
+            groupClause = "";
+    }
+
+    // TODO read influx host and api endpoints from config
+    var host = "https://hotel.psc.edu:8086";
+    var queryStr = encodeURIComponent(
+            "select count(value) from analyzed where value != 0 and time > now() - "+timeInterval+" "+tagClause
+            +";select count(value) from src_ip where time > now() - "+timeInterval+" "+tagClause
+            );
+
+    logger.log(queryStr);
+
+    var url = host+"/query?db=xsight&q="+queryStr;
+    request.get(url, function(error, response, body){
+        if(error){ // url request err chking
+            logger.error(error);
+            res.send("failed");
+        }
+        else{
+            var j = JSON.parse(body);
+            j = i2p.influx2pond(j); // err chk & convert to pond obj
+            res.json(j);
+        }
+    }).auth('dbuser', 'TcitoPsb', true);
+});
+
+
 // GET graph file
 app.get('/api/xsight/graph/', function(req, res) {
     // Read the content file then send it as response.

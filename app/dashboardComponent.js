@@ -6,12 +6,14 @@ var ReactGridLayout = require('react-grid-layout');
 var DiscoveryGraph = require('./discoveryGraphComponent.js');
 var TrafficView = require('./trafficOverviewComponent.js');
 var QualityView = require('./qualityOverviewComponent.js');
+var DataView = require('./dataViewComponent.js');
+var TabSelect = require('./tabSelectComponent.js');
 
 var Dashboard = React.createClass({
     getInitialState: function(){
         var dcGraph = {};
-        var tData = [{x:"no data", y:0}];
-        var qData = {};
+        var tData = ["init"];
+        var qData = ["init"];
         var sContext = {
                 database: "",
                 network: "",
@@ -32,11 +34,8 @@ var Dashboard = React.createClass({
             }.bind(this)
         });
        
-        this.getTrafficData(sContext, this, function(caller, data){
-            tData = data;
-        });
-
         return {
+            view: 0,
             sourceContext: {
                 database: "",
                 network: "",
@@ -45,13 +44,20 @@ var Dashboard = React.createClass({
             },
             dcData: dcGraph,
             trafficData: tData,
-            qualityData: this.getQualityData()
+            qualityData: qData
         };
+    },
+    setTab: function(){
+        var newView = this.state.view == 0 ? 1 : 0
+        this.setState({
+            view: newView
+        });
     },
     updateContext: function(srcContext){
         this.setState({
             sourceContext: srcContext,
-            qualityData: this.getQualityData()
+            qualityData: ["updating"], // this state will be set before the callback returns
+            trafficData: ["updating"]
         });
 
         //logger.log("updating dashboard context");
@@ -61,11 +67,12 @@ var Dashboard = React.createClass({
             });
         });
 
-
-        this.setState({
-            sourceContext: srcContext,
-            qualityData: this.getQualityData()
+        this.getQualityData(srcContext, this, function(caller, data){
+            caller.setState({
+                qualityData: data
+            });
         });
+
     },
     getTrafficData: function(srcContext, caller, callback){
         var apiUrl = this.props.trafficGraphURL; //start with base url then add on parameters
@@ -75,10 +82,10 @@ var Dashboard = React.createClass({
         if(srcContext.network != ""){
             tagStr = srcContext.network;   
         }
-        else if(srcContext.domain != ""){
+        if(srcContext.domain != ""){
             tagStr += " "+srcContext.domain;
         }
-        else if(srcContext.host != ""){
+        if(srcContext.host != ""){
             tagStr += " "+srcContext.host;
         }       
 
@@ -95,7 +102,6 @@ var Dashboard = React.createClass({
             cache: true,
             success: function(data){
                 console.log("getTrafficData() return"); 
-                console.log(data);
                 
                 //translate from series data to pieChart data (array of ordered pairs: label, value)
                 var pieData = [];
@@ -103,7 +109,7 @@ var Dashboard = React.createClass({
                     var tag = "";
                     for(i=0; i<data.series.length; i++){
                         tag = Object.keys(data.series[i].tags)[0]
-                        pieData[i] = {x: data.series[i].tags[tag], y: data.series[i].points[0][1]};
+                        pieData[i] = {x: data.series[i].tags[tag]+": "+data.series[i].points[0][1], y: data.series[i].points[0][1]};
                     }
                 }
 
@@ -115,16 +121,61 @@ var Dashboard = React.createClass({
                 callback(caller, pieData);
             }.bind(this),
             error: function(err){
-                callback(caller, [{}]);
+                callback(caller, []);
                 logger.error(apiUrl, status, err.toString());
             }.bind(this)
         });
-
     },
-    getQualityData: function(){
+    getQualityData: function(srcContext, caller, callback){
+        var apiUrl = this.props.qualityGraphURL; //start with base url then add on parameters
 
+        //append parameters to url (depenedent on sourceContext)
+        var tagStr = "-";
+        if(srcContext.network != ""){
+            tagStr = srcContext.network;   
+        }
+        if(srcContext.domain != ""){
+            tagStr += " "+srcContext.domain;
+        }
+        if(srcContext.host != ""){
+            tagStr += " "+srcContext.host;
+        }       
+
+        var duration = "year";
+
+        apiUrl += tagStr+"/"+duration;
+
+        logger.log(apiUrl);
+
+        // load data from server
+        this.asyncRequest = $.ajax({
+            url: apiUrl,
+            dataType: 'json',
+            cache: true,
+            success: function(data){
+                console.log("getQualityData() return"); 
+                
+                //translate from series data to pieChart data (array of ordered pairs: label, value)
+                var pieData = [];
+                if(data.series !== undefined && data.series.length >= 2){
+                    pieData[0] = {x: "Flagged: "+data.series[0].points[0][1], y: data.series[0].points[0][1]};
+                    pieData[1] = {x: "Total: "+data.series[1].points[0][1], y: data.series[1].points[0][1]};
+                }
+
+                callback(caller, pieData);
+            }.bind(this),
+            error: function(err){
+                callback(caller, []);
+                logger.error(apiUrl, status, err.toString());
+            }.bind(this)
+        });
     },
     render: function(){
+        var divStyle = {
+            "borderRadius": "25px",
+            "border": "2px solid"
+        };
+
         var data = {
             label: 'Traffic',
             values: [{x: 'DTN1', y: 68},{x: 'DTN2', y: 27},{x: 'DTN3', y: 10}]
@@ -132,36 +183,64 @@ var Dashboard = React.createClass({
 
         // Define ReactGridLayout for Dashboard
         var layout = [
-            {i: 'traffic-view', x: 0, y: 0, w: 6, h: 10, static: true}, 
-            {i: 'quality-view', x: 6, y: 0, w: 6, h: 10, static: true}, 
-            {i: 'dcgraph-view', x: 0, y: 11, w: 12, h: 18, static: true}
+            {i: 'tab', x: 0, y: 0, w: 2, h: 2, static: true}, 
+            {i: 'traffic-view', x: 0, y: 2, w: 1, h: 12, static: true}, 
+            {i: 'quality-view', x: 1, y: 2, w: 1, h: 12, static: true}, 
+            {i: 'dcgraph-view', x: 0, y: 15, w: 2, h: 13, static: true}
         ] 
 
-        return(
-            <ReactGridLayout className="layout" layout={layout} cols={12} rowHeight={30} width={1200}>
-                <div key={'traffic-view'}>
-                    <TrafficView.TrafficView
-                        data={this.state.trafficData}
+        if(this.state.view == 1){
+            return(
+                <div>
+                    <TabSelect.Row
+                        tabs={[ ["Dashboard", false], ["Data View", true] ] }
+                        clickEvent={this.setTab}
                     />
-                </div>
-                <div key={'quality-view'}>
-                    <QualityView.QualityView
-                        data={this.state.qualityData}
-                    />
-                </div>
-                <div key={'dcgraph-view'}>
-                    <DiscoveryGraph.DiscoveryGraph
-                        data={this.state.dcData}
+                    <DataView.Table
                         database={this.state.sourceContext.database} 
                         network={this.state.sourceContext.network} 
                         domain={this.state.sourceContext.domain} 
                         host={this.state.sourceContext.host} 
-                        onUserInput={this.updateContext}
-                        url={this.props.discoveryGraphURL}
                     />
                 </div>
-            </ReactGridLayout>
-        );
+            );
+        }
+        else{
+            return(
+                <ReactGridLayout className="layout" layout={layout} cols={2} rowHeight={30} width={1200}>
+                    <div key={'tab'}>
+                        <TabSelect.Row
+                            tabs={[ ["Dashboard", true], ["Data View", false] ] }
+                            clickEvent={this.setTab}
+                        />
+                    </div>
+                    <div style={divStyle}  key={'traffic-view'}>
+                        <TrafficView.TrafficView
+                            title={"Traffic Overview"}
+                            data={this.state.trafficData}
+                        />
+                    </div>
+                    <div style={divStyle} key={'quality-view'}>
+                        <TrafficView.TrafficView
+                        //<QualityView.QualityView
+                            title={"Quality Overview"}
+                            data={this.state.qualityData}
+                        />
+                    </div>
+                    <div key={'dcgraph-view'}>
+                        <DiscoveryGraph.DiscoveryGraph
+                            data={this.state.dcData}
+                            database={this.state.sourceContext.database} 
+                            network={this.state.sourceContext.network} 
+                            domain={this.state.sourceContext.domain} 
+                            host={this.state.sourceContext.host} 
+                            onUserInput={this.updateContext}
+                            url={this.props.discoveryGraphURL}
+                        />
+                    </div>
+                </ReactGridLayout>
+            );
+        }
     }
 });
 

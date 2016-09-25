@@ -12,8 +12,8 @@ var DiscoveryGraph = React.createClass({
         forceGraph.setInputCallback(this.handleChange);
     },
     componentDidMount: function(){
-        var elemWidth = $('#Dash').width();
-        var elemHeight = $('#Dash').height();
+        var elemWidth = 600;
+        var elemHeight = 800;
 
         // load data from server
         this.asyncRequest = $.ajax({
@@ -48,8 +48,17 @@ var DiscoveryGraph = React.createClass({
         );
     },
     render: function(){
+        var headerStyle = {
+            "textAlign": "center"
+        };
+        var divStyle = {
+            "borderRadius": "25px",
+            "border": "2px solid"
+        };
         return(
-            <div className="DiscoveryGraph" id="DiscoveryGraph" ></div>
+            <div style={divStyle} className="DiscoveryGraph" id="DiscoveryGraph" >
+            <h4 style={headerStyle}>{"Discovery Graph"}</h4>
+            </div>
         );
     }
 });

@@ -7,29 +7,57 @@ var d3 = require('d3');
 
 var QualityView = React.createClass({
     render: function(){
-        var data = [
-            [{
-                label: 'Quality',
-                values: []
-            }],
-            [{
-                label: 'Quality',
-                values: []
-            }],
-            [{
-                label: 'Quality',
-                values: []
-            }]
-        ]
-        //Fill values
-        for(var i=0; i<250; i++){
-            data[0][0].values.push({x: ''+i, y: (Math.random()>0.9) ? 1 : 0});
+        var headerStyle = {
+            "textAlign": "center"
+        };
+
+        var divStyle = {
+            "textAlign": "center",
+            "color": "#00529B",
+            "backgroundColor": "#BDE5F8",
+            "padding": "20px"
         }
 
-        return (
-            <div>
-            DTN1<ReactD3.Waveform
-                data={data[0]}
+        var data = {
+            label: 'Quality',
+            values: this.props.data
+        };
+
+        // do not display invalid data
+        if(data.values === undefined || data.values == null || data.values.length == 0){
+            return (<div>
+                <h4 style={headerStyle}>{"Quality Overview"}</h4>
+                <div style={divStyle}>
+                <p>{"No data returned"}</p>
+                </div></div>
+            );
+        }
+        
+        // do not display invalid data
+        if(data.values == "init"){
+            return (<div>
+                <h4 style={headerStyle}>{"Quality Overview"}</h4>
+                <div style={divStyle}>
+                <p>{"Interact with graph to load data"}</p>
+                </div></div>
+            );
+        }
+       
+        // if waiting for data to arrive (updating)
+        if(data.values[0] == "updating"){
+            return (<div>
+                <h4 style={headerStyle}>{"Quality Overview"}</h4>
+                <div style={divStyle}>
+                <p>{"Receiving data.."}</p>
+                </div></div>
+            );
+        }
+
+
+        return (<div>
+            <h4 style={headerStyle}>{"Quality Overview"}</h4>
+            <ReactD3.Waveform
+                data={data}
                 width={600}
                 height={100}
                 colorScale={ d3.scale.linear()
